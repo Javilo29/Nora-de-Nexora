@@ -1,5 +1,5 @@
 # Proyecto: Nora de Nexora - MyJNexoraVisual
-# Motor Dual: Groq (Primario Vision/Chat) + Gemini (Secundario) - v7.5.5 SRE
+# Motor Dual: Groq (Primario Vision/Chat) + Gemini (Secundario) - Nora v11.1 (Render Cloud)
 import os
 import json
 import gc
@@ -65,7 +65,7 @@ if GROQ_KEY:
     try:
         from groq import Groq
         groq_client = Groq(api_key=GROQ_KEY)
-        print("🧠 Motor Groq (Multimodal v7.5.5) inicializado correctamente.")
+        print("🧠 Motor Groq (Multimodal v11.1) inicializado correctamente.")
     except Exception as e:
         print(f"⚠️ Error inicializando Groq: {e}")
         groq_client = None
@@ -269,4 +269,4 @@ def proceso_visión_datos(file_paths, user_id=None, custom_prompt=None):
 
 
 if __name__ == "__main__":
-    print("🧠 Nora Brain v7.5.5 SRE Online.")
+    print("🧠 Nora Brain v11.1 (Render Cloud) Online.")

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Nora Autopsy v7.5.5 - Vision Diagnostics
+# Nora Autopsy v11.1 (Render Cloud) - Vision Diagnostics
 import sys
 import os
 import time
@@ -15,7 +15,7 @@ import ia_brain
 from ia_paths import VISION_HISTORY_DIR, VISION_HISTORY_LOG
 
 def run_autopsy():
-    print("🧠 [Nora Autopsy v7.5.5]: Iniciando diagnóstico de bajo nivel...")
+    print("🧠 [Nora Autopsy v11.1 (Render Cloud)]: Iniciando diagnóstico de bajo nivel...")
     
     # Localizar la última imagen de vision_history
     last_img = VISION_HISTORY_DIR / "img_AQADTAxrG1Eg0EZ-.jpg"

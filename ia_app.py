@@ -1,4 +1,4 @@
-# Nora Nexora v7.5.5 SRE - Main Server
+# Nora Nexora v11.1 (Render Cloud) - Main Server
 import os
 import threading
 import sys
@@ -11,6 +11,11 @@ try:
 except ImportError:
     pyttsx3 = None
     print("Aviso: pyttsx3 no disponible. Modo voz desactivado.")
+
+# --- INICIALIZACIÓN DE RUTAS ---
+DOWNLOAD_DIR = "downloads"
+if not os.path.exists(DOWNLOAD_DIR):
+    os.makedirs(DOWNLOAD_DIR)
 
 # --- CONFIGURACIÓN DE RUTAS ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -66,7 +71,7 @@ def hablar_nora(texto):
         except Exception as e:
             print(f"⚠️ Error en derivación de voz cloud: {e}")
 
-# --- SERVIDOR KEEPALIVE v7.5.5 ---
+# --- SERVIDOR KEEPALIVE v11.1 ---
 app = Flask(__name__)
 
 HTML_TEMPLATE = """
@@ -74,7 +79,7 @@ HTML_TEMPLATE = """
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Nora v7.5.5 | Groq SRE</title>
+    <title>Nora v11.1 (Render Cloud) | Groq Vision</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #f8fafc; padding: 2rem; }
         .card { background: #1e293b; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #f59e0b; margin-bottom: 1rem; }
@@ -141,9 +146,9 @@ def maintenance_watchdog():
 
 def run_flask(): app.run(host='0.0.0.0', port=8080)
 
-# --- INICIO v7.5.5 ---
+# --- INICIO v11.1 ---
 if __name__ == "__main__":
-    print("🚀 Nora de Nexora v7.5.5 SRE: Lanzando Parche de Saneamiento...")
+    print("🚀 Nora de Nexora v11.1 (Render Cloud): Lanzando Parche de Saneamiento...")
     kill_port(8080)
     kill_port(8888)
     

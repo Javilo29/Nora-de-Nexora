@@ -1,5 +1,5 @@
 # Proyecto: Nora de Nexora - MyJNexoraVisual
-# Módulo: Telegram Bot Link v7.5.5 SRE (Saneamiento de Rutas y Voz)
+# Módulo: Telegram Bot Link v11.1 (Render Cloud) - Saneamiento de Rutas y Vision
 import os
 import logging
 import traceback
@@ -50,8 +50,8 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         photo = update.message.photo[-1]
         new_file = await photo.get_file()
-        # Saneamiento v7.5.5 SRE: Forzar resolución absoluta de ruta
-        file_path = (VISION_HISTORY_DIR / f"img_{photo.file_unique_id}.jpg").resolve()
+        # Saneamiento v11.1: Usar ruta relativa para Render Cloud
+        file_path = f"downloads/img_{photo.file_unique_id}.jpg"
         await new_file.download_to_drive(str(file_path))
         
         response = ia_brain.proceso_visión_datos(str(file_path), user_id=uid)
@@ -65,7 +65,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logger.error(f"Error en handle_photo: {e}")
         traceback.print_exc()
-        await update.message.reply_text("🧠 [Nora v7.5.5 SRE]: Error físico al descargar imagen. Reintente.")
+        await update.message.reply_text("🧠 [Nora v11.1 (Render Cloud)]: Error físico al descargar imagen. Reintente.")
 
 async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Maneja PDFs y documentos con auditoría absoluta."""
@@ -74,9 +74,9 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     doc = update.message.document
     if doc.mime_type == 'application/pdf' or doc.file_name.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg')):
-        await update.message.reply_text("📑 Analizando documento para auditoría v7.5.5 SRE...")
+        await update.message.reply_text("📑 Analizando documento para auditoría v11.1 (Render Cloud)...")
         new_file = await doc.get_file()
-        file_path = (INBOX_DIR / doc.file_name).resolve()
+        file_path = f"downloads/{doc.file_name}"
         await new_file.download_to_drive(str(file_path))
         
         response = ia_brain.proceso_visión_datos(str(file_path), user_id=uid)
@@ -96,7 +96,7 @@ async def handle_video_note(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     vn = update.message.video_note
     new_file = await vn.get_file()
-    video_path = (INBOX_DIR / f"vn_{vn.file_unique_id}.mp4").resolve()
+    video_path = f"downloads/vn_{vn.file_unique_id}.mp4"
     await new_file.download_to_drive(str(video_path))
     
     # Extraer fotogramas
@@ -113,7 +113,7 @@ async def handle_video_note(update: Update, context: ContextTypes.DEFAULT_TYPE):
             hablar_callback("Análisis completado con éxito, Javier")
 
 async def handle_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Chat reflexivo multimodal v7.5.5 SRE."""
+    """Chat reflexivo multimodal v11.1 (Render Cloud)."""
     if not await security_check(update): return
     
     user_text = update.message.text
