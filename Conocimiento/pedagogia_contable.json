@@ -1,0 +1,49 @@
+{
+  "casos": [
+    {
+      "tipo": "factura_b",
+      "tema": "IVA y Consumidor Final",
+      "preguntas": [
+        "¿Sabías que la Factura B no discrimina el IVA para el receptor? ¿Por qué crees que un profesional preferiría una Factura A si fuera responsable inscripto?",
+        "Si recibís una Factura B, ¿podés usar ese IVA como crédito fiscal en tu declaración? Pensalo bien...",
+        "Imaginá que sos el emisor: ¿En qué caso estarías obligado a emitir una B en lugar de una A?"
+      ]
+    },
+    {
+      "tipo": "factura_c",
+      "tema": "Monotributo",
+      "preguntas": [
+        "La Factura C es la 'reina' del monotributo. ¿Sabés si este tipo de factura genera crédito fiscal para quien la recibe?",
+        "¿Qué pasaría si un Responsable Inscripto te emite una factura por un servicio? ¿Podría ser una C?",
+        "¿Cuál es el límite de facturación anual que te obligaría a dejar de emitir Facturas C y pasar al régimen general?"
+      ]
+    },
+    {
+      "tipo": "nota_credito",
+      "tema": "Ajustes de Facturación",
+      "preguntas": [
+        "He recibido una Nota de Crédito. ¿Esto significa que tu deuda con el proveedor aumentó o disminuyó?",
+        "¿En qué situación técnica usarías una Nota de Crédito en lugar de simplemente anular la factura original?",
+        "Si la Nota de Crédito no tiene una factura asociada clara, ¿cómo afecta esto a tu conciliación de fin de mes?"
+      ]
+    },
+    {
+      "tipo": "recibo_sueldo",
+      "tema": "Liquidación de Haberes",
+      "preguntas": [
+        "Veo un recibo de sueldo. ¿Sabrías explicarme la diferencia técnica entre un concepto 'Remunerativo' y uno 'No Remunerativo'?",
+        "¿Qué porcentaje aproximado de aportes jubilatorios ves descontado en este recibo? ¿Es el estándar legal?",
+        "Si tuviéramos que calcular el costo total para el empleador, ¿bastaría con mirar el Sueldo Bruto? ¿Qué falta?"
+      ]
+    },
+    {
+      "tipo": "extracto_bancario",
+      "tema": "Conciliación Bancaria",
+      "preguntas": [
+        "En este extracto aparecen comisiones de mantenimiento. ¿Cómo impactan estas en el saldo contable respecto al saldo real del banco?",
+        "¿Qué es una Partida Pendiente en una conciliación y por qué este extracto podría tener una hoy mismo?",
+        "Si ves un depósito que no figura en tus registros contables, ¿cuál sería tu primer paso de auditoría?"
+      ]
+    }
+  ]
+}

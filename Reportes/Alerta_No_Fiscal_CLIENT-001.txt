@@ -1,0 +1,16 @@
+ATENCIÓN PROFESIONAL: VALIDACIÓN TÉCNICA
+
+Sujeto: Alerta de Comprobante No-Fiscal
+Cliente: Maria Itati Palacio (ID: CLIENT-001)
+Documento: Comprobante Almia Clothes
+Monto: $14.500,00
+
+ANÁLISIS DE NORA:
+El documento cargado por el cliente es un COMPROBANTE INTERNO.
+Carece de CUIT del emisor y CAE (autorización fiscal).
+
+RECOMENDACIÓN:
+Se recomienda al profesional contable solicitar al cliente la Factura A o B legal 
+y advertir sobre los riesgos de registrar gastos sin comprobantes autorizados.
+
+Fecha del reporte: dom. 29/03/2026

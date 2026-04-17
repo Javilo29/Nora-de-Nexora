@@ -1,0 +1,7 @@
+# Nora Light — ia_biometria.py (OpenCV ligero + Gemini 1.5 API; sin TensorFlow/Keras/DeepFace)
+# pip install -r requirements-vision.txt
+-r requirements.txt
+opencv-python-headless>=4.8.0
+pyttsx3>=2.90
+gTTS>=2.5.0
+playsound==1.2.2

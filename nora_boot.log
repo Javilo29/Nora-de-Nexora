@@ -1,0 +1,44 @@
+﻿[ERR] 2026-03-31 19:14:03,714 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot8638244059:AAHkqrDpZaxWgHdVYufah9eYB5ERYu_Q0MY/getMe "HTTP/1.1 200 OK"
+[ERR] 2026-03-31 19:14:04,093 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot8638244059:AAHkqrDpZaxWgHdVYufah9eYB5ERYu_Q0MY/sendMessage "HTTP/1.1 200 OK"
+[ERR] 2026-03-31 19:14:04,093 - NoraLink - INFO - Bot notificado al administrador.
+[ERR] 2026-03-31 19:14:04,331 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot8638244059:AAHkqrDpZaxWgHdVYufah9eYB5ERYu_Q0MY/deleteWebhook "HTTP/1.1 200 OK"
+[ERR] 2026-03-31 19:14:04,331 - telegram.ext.Application - INFO - Application started
+[ERR] 2026-03-31 19:14:05,070 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot8638244059:AAHkqrDpZaxWgHdVYufah9eYB5ERYu_Q0MY/getUpdates "HTTP/1.1 200 OK"
+[ERR] Exception ignored in: <function SyncGoTrueClient.__del__ at 0x00000193BDC20860>
+[ERR] Traceback (most recent call last):
+[ERR]   File "C:\Users\Javier L├│pez G├│mez\AppData\Local\Programs\Python\Python312\Lib\site-packages\supabase_auth\_sync\gotrue_client.py", line 1288, in __del__
+[ERR]     if self._refresh_token_timer:
+[ERR]        ^^^^^^^^^^^^^^^^^^^^^^^^^
+[ERR] AttributeError: 'SyncSupabaseAuthClient' object has no attribute '_refresh_token_timer'
+[ERR] 2026-03-31 19:14:07,048 - telegram.ext.Application - ERROR - No error handlers are registered, logging exception.
+[ERR] Traceback (most recent call last):
+[ERR]   File "C:\Users\Javier L├│pez G├│mez\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\ext\_application.py", line 1234, in process_update
+[ERR]     await coroutine
+[ERR]   File "C:\Users\Javier L├│pez G├│mez\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\ext\_basehandler.py", line 157, in handle_update
+[ERR]     return await self.callback(update, context)
+[ERR]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[ERR]   File "D:\Biblioteca\Escritorio\AGENTE IA\Scripts\ia_telegram_bot.py", line 67, in handle_chat
+[ERR]     import ia_responder
+[ERR]   File "D:\Biblioteca\Escritorio\AGENTE IA\Scripts\ia_responder.py", line 15, in <module>
+[ERR]     SUPABASE_CLIENT: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY and "tu-proyecto" not in SUPABASE_URL else None
+[ERR]                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[ERR]   File "C:\Users\Javier L├│pez G├│mez\AppData\Local\Programs\Python\Python312\Lib\site-packages\supabase\_sync\client.py", line 380, in create_client
+[ERR]     return Client.create(
+[ERR]            ^^^^^^^^^^^^^^
+[ERR]   File "C:\Users\Javier L├│pez G├│mez\AppData\Local\Programs\Python\Python312\Lib\site-packages\supabase\_sync\client.py", line 109, in create
+[ERR]     client = cls(supabase_url, supabase_key, options)
+[ERR]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[ERR]   File "C:\Users\Javier L├│pez G├│mez\AppData\Local\Programs\Python\Python312\Lib\site-packages\supabase\_sync\client.py", line 87, in __init__
+[ERR]     self.auth = self._init_supabase_auth_client(
+[ERR]                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[ERR]   File "C:\Users\Javier L├│pez G├│mez\AppData\Local\Programs\Python\Python312\Lib\site-packages\supabase\_sync\client.py", line 281, in _init_supabase_auth_client
+[ERR]     return SyncSupabaseAuthClient(
+[ERR]            ^^^^^^^^^^^^^^^^^^^^^^^
+[ERR]   File "C:\Users\Javier L├│pez G├│mez\AppData\Local\Programs\Python\Python312\Lib\site-packages\supabase\_sync\auth_client.py", line 46, in __init__
+[ERR]     super().__init__(
+[ERR]   File "C:\Users\Javier L├│pez G├│mez\AppData\Local\Programs\Python\Python312\Lib\site-packages\supabase_auth\_sync\gotrue_client.py", line 133, in __init__
+[ERR]     SyncGoTrueBaseAPI.__init__(
+[ERR]   File "C:\Users\Javier L├│pez G├│mez\AppData\Local\Programs\Python\Python312\Lib\site-packages\supabase_auth\_sync\gotrue_base_api.py", line 25, in __init__
+[ERR]     self._http_client = http_client or Client(
+[ERR]                                        ^^^^^^^
+[ERR] TypeError: Client.__init__() got an unexpected keyword argument 'proxy'

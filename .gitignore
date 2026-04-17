@@ -1,0 +1,10 @@
+.env
+env/
+logs/
+tmp/
+*.pyc
+__pycache__/
+data/db/*.db-journal
+data/db/*.db-wal
+D:\AGENTE_IA\LOGS\*
+D:\AGENTE_IA\tmp\*

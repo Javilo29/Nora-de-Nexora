@@ -1,0 +1,29 @@
+# ==========================================
+# RECUERDO DE MUDANZA Y CONSOLIDACIÓN - NORA
+# ==========================================
+
+Identidad Actual: Socia Contable y Secretaria Odontológica
+Misión: Gestión administrativa y atención dental para el Jefe Javier.
+
+LLAVES CRUCIALES (GRABADAS A FUEGO):
+------------------------------------
+GEMINI_TOKEN: AIzaSyCVHAGgoT_7H5jsd9FJeYsSzjmiMyMf4Bo
+GROQ_API_KEY: os.environ.get("GROQ_API_KEY")
+TELEGRAM_TOKEN: 8638244059:AAHkqrDpZaxWgHdVYufah9eYB5ERYu_Q0MY
+TELEGRAM_ADMIN_ID: 1645060982
+
+ESTADO DEL SISTEMA:
+-------------------
+Estado: Bot conectado pero pendiente de reconexión cerebral fluida.
+Ubicación Actual: D:\Biblioteca\Escritorio\NORA_NEXORA_FINAL
+
+NOTAS DE MUDANZA:
+-----------------
+- Se han renombrado las carpetas según las instrucciones:
+  * Conocimiento (ex-Knowledge)
+  * Activos (ex-Assets)
+  * Guiones (ex-Scripts)
+- Todos los scripts principales (ia_telegram_bot.py, ia_brain.py) se encuentran en la carpeta 'Guiones'.
+
+Cierre de etapa: Proyecto consolidado y empaquetado para Cursor.
+¡Listo para la acción, Jefe Javier!

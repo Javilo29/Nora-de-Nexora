@@ -1,0 +1,7 @@
+python-telegram-bot
+pyTelegramBotAPI
+groq
+python-dotenv
+flask
+requests
+psutil
