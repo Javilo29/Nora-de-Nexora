@@ -6,7 +6,11 @@ import gc
 import psutil
 import subprocess
 import platform
-import pyttsx3
+try:
+    import pyttsx3
+except ImportError:
+    pyttsx3 = None
+    print("Aviso: pyttsx3 no disponible. Modo voz desactivado.")
 
 # --- CONFIGURACIÓN DE RUTAS ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -38,7 +42,7 @@ def hablar_nora(texto):
     current_os = platform.system()
     print(f"🎙️ Nora Vocalizando ({current_os}): {texto}")
     
-    if current_os == "Windows":
+    if current_os == "Windows" and pyttsx3:
         try:
             # Inicialización perezosa para evitar bloqueos
             engine = pyttsx3.init()
@@ -48,6 +52,8 @@ def hablar_nora(texto):
             engine.runAndWait()
         except Exception as e:
             print(f"⚠️ Error en locución local (Windows): {e}")
+    elif current_os == "Windows" and not pyttsx3:
+        print("⚠️ Modo voz local (Windows) desactivado por falta de pyttsx3.")
     else:
         # Modo Nube (Replit/Linux): Derivar a Telegram Admin
         print("☁️ Modo Nube detectado. Derivando voz a canal de texto/audio prioritario.")
