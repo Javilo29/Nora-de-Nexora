@@ -26,7 +26,7 @@ except ImportError:
 
 # Valores de Respaldo para FPS.ms
 TOKEN = os.getenv("BOT_TOKEN") or "8638244059:AAGEkLUe4uRmhF3eYb7CxPhFjJeiQa7fuxc"
-GROQ_API_KEY = os.getenv("GROQ_API_KEY") or "gsk_poner_aqui_api_key_real"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")  # Configurar en panel FPS.ms → Environment Variables
 ADMIN_ID = int(os.getenv("ADMIN_CHAT_ID") or "1645060982")
 
 # Verificación de Seguridad en Consola
