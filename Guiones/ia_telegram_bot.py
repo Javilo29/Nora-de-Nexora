@@ -4,6 +4,8 @@ import os
 import logging
 import traceback
 import asyncio
+import tempfile
+import requests
 from pathlib import Path
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
@@ -50,18 +52,28 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         photo = update.message.photo[-1]
         new_file = await photo.get_file()
-        # Saneamiento v11.1: Usar ruta relativa para Render Cloud
-        file_path = f"downloads/img_{photo.file_unique_id}.jpg"
-        await new_file.download_to_drive(str(file_path))
         
-        response = ia_brain.proceso_visión_datos(str(file_path), user_id=uid)
-        await update.message.reply_text(response)
+        # Saneamiento v11.1: Usar tempfile para Render Cloud
+        file_url = new_file.file_path
+        img_res = requests.get(file_url)
         
-        if uid == ADMIN_ID and hablar_callback:
-            if "interrupción técnica" not in response.lower():
-                hablar_callback("Análisis completado con éxito, Javier")
-            else:
-                hablar_callback("Javier, el flujo visual ha tenido una interrupción técnica, por favor reintente")
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
+            tmp_file.write(img_res.content)
+            file_path = tmp_file.name
+        
+        try:
+            response = ia_brain.proceso_visión_datos(str(file_path), user_id=uid)
+            await update.message.reply_text(response)
+            
+            if uid == ADMIN_ID and hablar_callback:
+                if "interrupción técnica" not in response.lower():
+                    hablar_callback("Análisis completado con éxito, Javier")
+                else:
+                    hablar_callback("Javier, el flujo visual ha tenido una interrupción técnica, por favor reintente")
+        finally:
+            # Limpieza inmediata para ahorrar espacio en Render (1GB límite)
+            if os.path.exists(file_path):
+                os.unlink(file_path)
     except Exception as e:
         logger.error(f"Error en handle_photo: {e}")
         traceback.print_exc()
@@ -76,15 +88,25 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if doc.mime_type == 'application/pdf' or doc.file_name.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg')):
         await update.message.reply_text("📑 Analizando documento para auditoría v11.1 (Render Cloud)...")
         new_file = await doc.get_file()
-        file_path = f"downloads/{doc.file_name}"
-        await new_file.download_to_drive(str(file_path))
         
-        response = ia_brain.proceso_visión_datos(str(file_path), user_id=uid)
-        await update.message.reply_text(response)
+        file_url = new_file.file_path
+        doc_res = requests.get(file_url)
+        suffix = Path(doc.file_name).suffix or ".pdf"
         
-        if uid == ADMIN_ID and hablar_callback:
-            if "interrupción técnica" not in response.lower():
-                hablar_callback("Análisis completado con éxito, Javier")
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
+            tmp_file.write(doc_res.content)
+            file_path = tmp_file.name
+        
+        try:
+            response = ia_brain.proceso_visión_datos(str(file_path), user_id=uid)
+            await update.message.reply_text(response)
+            
+            if uid == ADMIN_ID and hablar_callback:
+                if "interrupción técnica" not in response.lower():
+                    hablar_callback("Análisis completado con éxito, Javier")
+        finally:
+            if os.path.exists(file_path):
+                os.unlink(file_path)
     else:
         await update.message.reply_text("Solo analizo PDFs o imágenes para auditoría contable.")
 
@@ -96,21 +118,30 @@ async def handle_video_note(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     vn = update.message.video_note
     new_file = await vn.get_file()
-    video_path = f"downloads/vn_{vn.file_unique_id}.mp4"
-    await new_file.download_to_drive(str(video_path))
     
-    # Extraer fotogramas
-    frames = ia_brain.extract_keyframes(str(video_path))
-    if not frames:
-        await update.message.reply_text("No pude extraer cuadros del video.")
-        return
+    file_url = new_file.file_path
+    vn_res = requests.get(file_url)
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tmp_file:
+        tmp_file.write(vn_res.content)
+        video_path = tmp_file.name
+    
+    try:
+        # Extraer fotogramas
+        frames = ia_brain.extract_keyframes(str(video_path))
+        if not frames:
+            await update.message.reply_text("No pude extraer cuadros del video.")
+            return
+            
+        response = ia_brain.proceso_visión_datos(frames, user_id=uid)
+        await update.message.reply_text(response)
         
-    response = ia_brain.proceso_visión_datos(frames, user_id=uid)
-    await update.message.reply_text(response)
-    
-    if uid == ADMIN_ID and hablar_callback:
-        if "interrupción técnica" not in response.lower():
-            hablar_callback("Análisis completado con éxito, Javier")
+        if uid == ADMIN_ID and hablar_callback:
+            if "interrupción técnica" not in response.lower():
+                hablar_callback("Análisis completado con éxito, Javier")
+    finally:
+        if os.path.exists(video_path):
+            os.unlink(video_path)
 
 async def handle_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Chat reflexivo multimodal v11.1 (Render Cloud)."""

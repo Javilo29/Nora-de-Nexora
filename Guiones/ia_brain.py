@@ -7,6 +7,7 @@ import time
 import logging
 import traceback
 import base64
+import tempfile
 logger = logging.getLogger("NoraBrain")
 from pathlib import Path
 from ia_paths import BASE_DIR, TMP_DIR, KNOWLEDGE_DIR, LOGS_DIR, DATA_DIR
@@ -225,9 +226,10 @@ def extract_keyframes(video_path, num_frames=3):
         cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
         ret, frame = cap.read()
         if ret:
-            frame_path = TMP_DIR / f"frame_{idx}_{time.time()}.jpg"
-            cv2.imwrite(str(frame_path), frame)
-            frames.append(str(frame_path))
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_frame:
+                frame_path = tmp_frame.name
+                cv2.imwrite(frame_path, frame)
+                frames.append(frame_path)
     cap.release()
     return frames
 
@@ -245,10 +247,11 @@ def optimizar_imagen(file_path):
             img = img.convert("RGB")
             
         img.thumbnail((1024, 1024), PIL.Image.Resampling.LANCZOS)
-        opt_path = TMP_DIR / f"opt_{int(time.time())}_{path_orig.name}"
-        img.save(opt_path, "JPEG", quality=70, optimize=True)
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_opt:
+            opt_path = tmp_opt.name
+            img.save(opt_path, "JPEG", quality=70, optimize=True)
         img.close()
-        return str(opt_path)
+        return opt_path
     except Exception as e:
         print(f"⚠️ Fallo al optimizar imagen: {e}")
         return file_path
@@ -285,7 +288,7 @@ def proceso_visión_datos(file_paths, user_id=None, custom_prompt=None):
         # Saneamiento v11.1: Lista de modelos a probar en orden
         modelos_a_probar = [
             "llama-3.2-90b-vision-preview",
-            "llama-3.2-11b-vision-preview", # Fallback por si lo reactivan
+            "llama-3.2-11b-vision-preview-free", # Fallback por si lo reactivan
             "meta-llama/llama-4-scout-17b-16e-instruct" # Plan C (Siguiente generación)
         ]
                 
@@ -313,16 +316,18 @@ def proceso_visión_datos(file_paths, user_id=None, custom_prompt=None):
                 done = True
                 print(f"✅ Análisis de visión completado con éxito ({m_used}).")
                 break
-            except Exception as model_err:
-                err_str = str(model_err).lower()
+            except Exception as e:
+                if "decommissioned" in str(e).lower():
+                    continue
+                err_str = str(e).lower()
                 if "400" in err_str and "decommissioned" in err_str:
                     print(f"⚠️ MODELO DECOMISIONADO: {model_id}. Pasando al siguiente.")
                 elif "404" in err_str or "not found" in err_str:
                     print(f"⚠️ MODELO NO ENCONTRADO: {model_id}. Pasando al siguiente.")
                 else:
-                    print(f"⚠️ Error con {model_id}: {model_err}")
+                    print(f"⚠️ Error con {model_id}: {e}")
                     if model_id == modelos_a_probar[-1]: # Si es el último, lanzar la excepción
-                        raise model_err
+                        raise e
 
     except Exception as e:
         err_msg = f"❌ DEBUG VISION - Error total tras agotar modelos: {str(e)}"
