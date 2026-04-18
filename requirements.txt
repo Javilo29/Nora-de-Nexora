@@ -6,3 +6,9 @@ flask
 requests
 psutil
 Pillow
+supabase
+face_recognition
+python-nmap
+opencv-python
+pyttsx3
+numpy
