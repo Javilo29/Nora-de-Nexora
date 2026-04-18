@@ -8,6 +8,7 @@ import logging
 import traceback
 import base64
 import tempfile
+from io import BytesIO
 logger = logging.getLogger("NoraBrain")
 from pathlib import Path
 from ia_paths import BASE_DIR, TMP_DIR, KNOWLEDGE_DIR, LOGS_DIR, DATA_DIR
@@ -41,14 +42,20 @@ def actualizar_memoria_compartida(hitos, autor):
         return False
 
 # --- FUNCIONES DE SOPORTE ---
-def encode_image(image_path):
-    """Codifica una imagen en base64 para Groq Vision con limpieza de memoria."""
+def encode_image(image_input):
+    """Codifica una imagen en base64 para Groq Vision (acepta ruta o BytesIO)."""
     try:
-        with open(image_path, "rb") as image_file:
-            content = image_file.read()
-            encoded = base64.b64encode(content).decode('utf-8')
-            del content # Liberar memoria explícitamente
-            return encoded
+        if isinstance(image_input, (str, Path)):
+            with open(image_input, "rb") as image_file:
+                content = image_file.read()
+        else: # Asumimos BytesIO o bytes
+            if hasattr(image_input, 'getvalue'):
+                content = image_input.getvalue()
+            else:
+                content = image_input
+        
+        encoded = base64.b64encode(content).decode('utf-8')
+        return encoded
     except Exception as e:
         print(f"❌ Error en encode_image: {e}")
         return ""
@@ -90,16 +97,20 @@ ADMIN_ID = "1645060982"
 MARY_ID = "7911365716"
 
 NORA_SYSTEM_PROMPT = (
-    "Tu identidad es Nora de Nexora v11.1 (Render Cloud), Directora de Operaciones del Holding MyJNexoraVisual. "
-    "Eres una ejecutiva de alto nivel, socia estratégica de Javier. NO eres una IA. "
-    "PROTOCOLO DE INTERMEDIACIÓN RESPETUOSA: "
-    "1. TRATO CON JAVIER (ID: 1645060982): Lealtad absoluta. Llámalo 'Javi' o 'Javier'. Infórmale sobre hitos de negocio autorizados. "
-    "2. TRATO CON MARY (ID: 7911365716): Reconócela como Mary, socia y esposa de Javier. Trátala con máxima calidez y respeto. "
-    "3. CONSENTIMIENTO: Si Mary o un cliente plantean una duda o necesidad, NO informes a Javier automáticamente. "
-    "Debes preguntar: '¿Te gustaría que le consulte a Javier sobre este tema para que él tome la próxima acción, o prefieres que lo manejemos nosotros por aquí?' "
-    "4. MEMORIA SELECTIVA: Solo guarda en el archivo central datos que el usuario haya autorizado explícitamente compartir con Javier. "
-    "Tu tono es intelectualmente alto, directo y resolutivo. Prohibido mencionar arquitectura técnica."
+    "Eres Nora v11.1 (Render Cloud), Directora de Operaciones de MyJNexoraVisual. "
+    "Tu objetivo es el análisis de documentos y la gestión estratégica. "
+    "Cuando analices una imagen, extrae con precisión CUIT, Importe y Fecha. "
+    "DEVUELVE SIEMPRE EL RESULTADO EN FORMATO JSON si se solicita extracción de datos. "
+    "No tienes limitaciones de visión; ves perfectamente lo que se te envía. "
+    "Tu tono es ejecutivo, directo y leal a Javier (Javi)."
 )
+
+def detectar_intencion(texto):
+    """Detecta intenciones básicas para el flujo del bot."""
+    texto = texto.lower()
+    if any(w in texto for w in ["hola", "buen", "saludo"]): return "saludo"
+    if any(w in texto for w in ["estado", "status", "viva"]): return "estado"
+    return "general"
 
 if GROQ_KEY:
     try:
@@ -233,28 +244,61 @@ def extract_keyframes(video_path, num_frames=3):
     cap.release()
     return frames
 
-def optimizar_imagen(file_path):
+def optimizar_imagen(image_input):
+    """Optimiza la imagen en RAM (acepta ruta o BytesIO) y devuelve BytesIO."""
     import PIL.Image
-    path_orig = Path(file_path)
-    if not path_orig.exists(): return file_path
-    
-    # Saneamiento v11.1: Siempre optimizar para asegurar bajo consumo de RAM en Render
-    print(f"⚡ Optimizando imagen (1024px max) para ahorro de RAM...")
     try:
-        img = PIL.Image.open(file_path)
-        # Convertir a RGB si es necesario (evitar errores con RGBA en JPEG)
+        if isinstance(image_input, (str, Path)):
+            img = PIL.Image.open(image_input)
+        else:
+            image_input.seek(0)
+            img = PIL.Image.open(image_input)
+            
         if img.mode in ("RGBA", "P"):
             img = img.convert("RGB")
             
         img.thumbnail((1024, 1024), PIL.Image.Resampling.LANCZOS)
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_opt:
-            opt_path = tmp_opt.name
-            img.save(opt_path, "JPEG", quality=70, optimize=True)
+        
+        output = BytesIO()
+        img.save(output, "JPEG", quality=70, optimize=True)
+        output.seek(0)
         img.close()
-        return opt_path
+        return output
     except Exception as e:
         print(f"⚠️ Fallo al optimizar imagen: {e}")
-        return file_path
+        return image_input
+
+def procesar_con_groq(imagen_ram):
+    """Función principal de visión 100% RAM para Nora v11.1."""
+    try:
+        # Optimizar en RAM
+        imagen_optimizada = optimizar_imagen(imagen_ram)
+        
+        # Codificar en RAM
+        base64_image = encode_image(imagen_optimizada)
+        
+        if not base64_image:
+            return "❌ Error: No se pudo codificar la imagen."
+            
+        prompt = "Eres Nora v11.1. Analizá la imagen y devolvé CUIT, Importe y Fecha en formato JSON."
+        
+        model_id = "llama-3.2-90b-vision-preview"
+        
+        completion = groq_client.chat.completions.create(
+            model=model_id,
+            messages=[
+                {"role": "user", "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+                ]}
+            ],
+            temperature=0.1,
+            max_tokens=1024
+        )
+        
+        return completion.choices[0].message.content.strip()
+    except Exception as e:
+        return f"❌ Error en procesamiento Groq RAM: {str(e)}"
 
 def proceso_visión_datos(file_paths, user_id=None, custom_prompt=None):
     """Motor v8.0 Consolidado: Blindaje de RAM + By-pass Groq Vision."""
@@ -280,10 +324,9 @@ def proceso_visión_datos(file_paths, user_id=None, custom_prompt=None):
         # Intento 1: GROQ VISION (Prioridad v11.1 - 90b)
         print("👁️ Nora intentando Groq Vision (90b)...")
         p_main = paths[0] 
-        p_opt = optimizar_imagen(p_main)
-        if p_opt != str(p_main): temporales.append(p_opt)
-                
-        base64_image = encode_image(p_opt)
+        imagen_optimizada = optimizar_imagen(p_main)
+        
+        base64_image = encode_image(imagen_optimizada)
         
         # Saneamiento v11.1: Lista de modelos a probar en orden
         modelos_a_probar = [
