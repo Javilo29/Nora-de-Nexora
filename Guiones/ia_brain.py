@@ -36,9 +36,16 @@ def actualizar_memoria_compartida(hitos, autor):
 
 # --- FUNCIONES DE SOPORTE ---
 def encode_image(image_path):
-    """Codifica una imagen en base64 para Groq Vision."""
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
+    """Codifica una imagen en base64 para Groq Vision con limpieza de memoria."""
+    try:
+        with open(image_path, "rb") as image_file:
+            content = image_file.read()
+            encoded = base64.b64encode(content).decode('utf-8')
+            del content # Liberar memoria explícitamente
+            return encoded
+    except Exception as e:
+        print(f"❌ Error en encode_image: {e}")
+        return ""
 
 LOCK_FILE = TMP_DIR / "ocr.lock"
 
@@ -212,17 +219,23 @@ def optimizar_imagen(file_path):
     import PIL.Image
     path_orig = Path(file_path)
     if not path_orig.exists(): return file_path
-    size_mb = os.path.getsize(file_path) / (1024 * 1024)
-    if size_mb < 1.0: return file_path # Más agresivo para Groq
-    print(f"⚡ Optimizando imagen para Groq Vision...")
+    
+    # Saneamiento v11.1: Siempre optimizar para asegurar bajo consumo de RAM en Render
+    print(f"⚡ Optimizando imagen (1024px max) para ahorro de RAM...")
     try:
         img = PIL.Image.open(file_path)
-        img.thumbnail((1200, 1200), PIL.Image.Resampling.LANCZOS)
+        # Convertir a RGB si es necesario (evitar errores con RGBA en JPEG)
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+            
+        img.thumbnail((1024, 1024), PIL.Image.Resampling.LANCZOS)
         opt_path = TMP_DIR / f"opt_{int(time.time())}_{path_orig.name}"
-        img.save(opt_path, "JPEG", quality=80, optimize=True)
+        img.save(opt_path, "JPEG", quality=70, optimize=True)
         img.close()
         return str(opt_path)
-    except Exception: return file_path
+    except Exception as e:
+        print(f"⚠️ Fallo al optimizar imagen: {e}")
+        return file_path
 
 def proceso_visión_datos(file_paths, user_id=None, custom_prompt=None):
     """Motor v8.0 Consolidado: Blindaje de RAM + By-pass Groq Vision."""
@@ -268,9 +281,12 @@ def proceso_visión_datos(file_paths, user_id=None, custom_prompt=None):
                 body = completion.choices[0].message.content.strip()
                 m_used = "llama-3.2-11b-vision"
                 done = True
+                print(f"✅ Análisis de visión completado con éxito ({m_used}).")
             except Exception as e:
-                print(f"⚠️ Groq Vision falló: {e}")
+                err_msg = f"❌ ERROR DE API/MEMORIA EN GROQ VISION: {str(e)}"
+                print(err_msg)
                 traceback.print_exc()
+                body = f"Javier, el motor Groq Vision reporta un error técnico: {str(e)}"
 
         # Fallback a Gemini si Groq falla
         if not done and gemini_model:
