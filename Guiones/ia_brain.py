@@ -274,17 +274,26 @@ def proceso_visión_datos(file_paths, user_id=None, custom_prompt=None):
         done = False
         m_used = "ninguno"
 
-        # Intento 1: GROQ VISION (Prioridad SRE v8.0)
-        if groq_client:
-            try:
-                print("👁️ Nora aplicando Saneamiento v8.0: Groq Vision...")
-                p_main = paths[0] 
-                p_opt = optimizar_imagen(p_main)
-                if p_opt != str(p_main): temporales.append(p_opt)
+        # Intento 1: GROQ VISION (Prioridad v11.1 - 90b)
+        print("👁️ Nora intentando Groq Vision (90b)...")
+        p_main = paths[0] 
+        p_opt = optimizar_imagen(p_main)
+        if p_opt != str(p_main): temporales.append(p_opt)
                 
-                base64_image = encode_image(p_opt)
+        base64_image = encode_image(p_opt)
+        
+        # Saneamiento v11.1: Lista de modelos a probar en orden
+        modelos_a_probar = [
+            "llama-3.2-90b-vision-preview",
+            "llama-3.2-11b-vision-preview", # Fallback por si lo reactivan
+            "meta-llama/llama-4-scout-17b-16e-instruct" # Plan C (Siguiente generación)
+        ]
+                
+        for model_id in modelos_a_probar:
+            try:
+                print(f"🔄 Probando modelo: {model_id}...")
                 completion = groq_client.chat.completions.create(
-                    model="llama-3.2-11b-vision-preview",
+                    model=model_id,
                     messages=[
                         {"role": "user", "content": [
                             {"type": "text", "text": prompt},
@@ -295,42 +304,30 @@ def proceso_visión_datos(file_paths, user_id=None, custom_prompt=None):
                     max_tokens=1024
                 )
                 body = completion.choices[0].message.content.strip()
-                m_used = "llama-3.2-11b-vision"
+                m_used = model_id
                 done = True
                 print(f"✅ Análisis de visión completado con éxito ({m_used}).")
-            except Exception as e:
-                err_msg = f"❌ DEBUG VISION - Error completo: {str(e)}"
-                print(err_msg)
-                traceback.print_exc()
-                
-                # Intento de recuperación con modelo alternativo si es error de modelo
-                if "404" in str(e) or "model_not_found" in str(e).lower():
-                    try:
-                        print("🔄 Intentando recuperación con modelo alternativo (90b)...")
-                        completion = groq_client.chat.completions.create(
-                            model="llama-3.2-90b-vision-preview",
-                            messages=[
-                                {"role": "user", "content": [
-                                    {"type": "text", "text": prompt},
-                                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
-                                ]}
-                            ],
-                            temperature=0.1,
-                            max_tokens=1024
-                        )
-                        body = completion.choices[0].message.content.strip()
-                        m_used = "llama-3.2-90b-vision"
-                        done = True
-                        print(f"✅ Recuperación exitosa con {m_used}.")
-                    except Exception as e2:
-                        print(f"❌ Fallo también el modelo alternativo: {e2}")
-                        body = f"Javier, el motor Groq Vision reporta un error técnico crítico: {str(e)}"
+                break
+            except Exception as model_err:
+                err_str = str(model_err).lower()
+                if "400" in err_str and "decommissioned" in err_str:
+                    print(f"⚠️ MODELO DECOMISIONADO: {model_id}. Pasando al siguiente.")
+                elif "404" in err_str or "not found" in err_str:
+                    print(f"⚠️ MODELO NO ENCONTRADO: {model_id}. Pasando al siguiente.")
                 else:
-                    body = f"Javier, el motor Groq Vision reporta un error de conexión: {str(e)}"
+                    print(f"⚠️ Error con {model_id}: {model_err}")
+                    if model_id == modelos_a_probar[-1]: # Si es el último, lanzar la excepción
+                        raise model_err
+
+    except Exception as e:
+        err_msg = f"❌ DEBUG VISION - Error total tras agotar modelos: {str(e)}"
+        print(err_msg)
+        traceback.print_exc()
+        body = f"Javier, el motor Groq Vision reporta un error técnico crítico: {str(e)}"
 
         # Fallback a Gemini si Groq falla
         if not done and gemini_model:
-            print("👁️ Intentando Fallback a Gemini (v8.0 Ready)...")
+            print("👁️ Intentando Fallback a Gemini (v11.1 Ready)...")
             # Implementación simplificada de backup
             pass
 
@@ -345,7 +342,7 @@ def proceso_visión_datos(file_paths, user_id=None, custom_prompt=None):
                 if jm:
                     data = json.loads(jm.group())
                     if data.get("total"):
-                        ia_local_store.registrar_operacion_contable(user_id=user_id, monto=float(data.get("total")), proveedor=data.get("emisor"), concepto="Groq Vision v8.0")
+                        ia_local_store.registrar_operacion_contable(user_id=user_id, monto=float(data.get("total")), proveedor=data.get("emisor"), concepto="Groq Vision v11.1")
             except Exception as audit_err:
                 print(f"⚠️ Error en auditoría JSON: {audit_err}")
 
