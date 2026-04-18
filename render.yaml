@@ -2,4 +2,4 @@ services:
   - type: web
     name: Nora-de-Nexora
     env: python
-    startCommand: python nora_cloud_bot.py
+    startCommand: python bot_simple.py
