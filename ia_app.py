@@ -147,7 +147,7 @@ def maintenance_watchdog():
 def run_flask(): app.run(host='0.0.0.0', port=8080)
 
 # --- INICIO v11.1 ---
-if __name__ == "__main__":
+def main():
     print("🚀 Nora de Nexora v11.1 (Render Cloud): Lanzando Parche de Saneamiento...")
     kill_port(8080)
     kill_port(8888)
@@ -170,3 +170,6 @@ if __name__ == "__main__":
         ia_telegram_bot.run_bot()
     except Exception as e:
         print(f"❌ Error crítico en el bot: {e}")
+
+if __name__ == "__main__":
+    main()
