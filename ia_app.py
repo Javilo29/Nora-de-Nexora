@@ -42,7 +42,7 @@ def kill_port(port):
                 os.kill(int(pid), 9)
     except Exception: pass
 
-# --- MOTOR DE VOZ v8.0 UNIVERSAL ---
+# --- MOTOR DE VOZ v11.1 UNIVERSAL ---
 def hablar_nora(texto):
     current_os = platform.system()
     print(f"🎙️ Nora Vocalizando ({current_os}): {texto}")
@@ -88,7 +88,7 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
-    <h1>🧠 Nora Nexora v8.2: Infraestructura Multinodal</h1>
+    <h1>🧠 Nora Nexora v11.1: Infraestructura Multinodal</h1>
     <div class="card">
         <div class="metric">Gateway: <span class="status">WhatsApp & Telegram Activos</span></div>
         <div class="metric">Watchdog: <span class="status">Protección de RAM Activada (12h)</span></div>
@@ -121,13 +121,8 @@ def whatsapp_webhook():
         return jsonify({"status": "ok"}), 200
 
 def maintenance_watchdog():
-    """Watchdog v8.2: Limpieza de logs y RAM cada 12 horas."""
-    import time
-    from ia_paths import LOGS_DIR, TMP_DIR
-    
-    while True:
         try:
-            print("🛡️ Watchdog: Iniciando saneamiento de ciclos v8.2...")
+            print("🛡️ Watchdog: Iniciando saneamiento de ciclos v11.1...")
             # Limpiar TMP
             for f in TMP_DIR.glob("*"):
                 if f.is_file(): f.unlink()
@@ -159,9 +154,9 @@ if __name__ == "__main__":
     t.start()
     
     ia_telegram_bot.hablar_callback = hablar_nora
-    hablar_nora("Sistema Multinodal v8.2 activo, Javier. WhatsApp y Telegram sincronizados en el Disco D")
+    hablar_nora("Sistema Multinodal v11.1 activo, Javier. WhatsApp y Telegram sincronizados en el Disco D")
     
-    # Iniciar Watchdog v8.2 (RAM & Cleanup)
+    # Iniciar Watchdog v11.1 (RAM & Cleanup)
     wt = threading.Thread(target=maintenance_watchdog)
     wt.daemon = True
     wt.start()

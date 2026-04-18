@@ -140,11 +140,13 @@ async def handle_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Javi, error de enlace cognitivo en el hilo {uid}. Reintente.")
 
 async def send_ignition_report(application: Application):
-    """Reporte de ignición v8.1 - Socia de Javier."""
+    """Reporte de ignición v11.1 - Socia de Javier."""
     msg = "Javi, estoy aquí. Ya dejé atrás la rigidez. ¿A qué hito de negocio le vamos a dedicar nuestro genio hoy?"
     try:
+        # Limpieza de webhook previo para evitar conflictos en Render
+        await application.bot.delete_webhook(drop_pending_updates=True)
         await application.bot.send_message(chat_id=ADMIN_ID, text=msg)
-        print(f"✨ [Ignición v8.1]: Mensaje enviado a Javi.")
+        print(f"✨ [Ignición v11.1]: Mensaje enviado a Javi.")
     except Exception as e:
         print(f"⚠️ Fallo al enviar reporte de ignición: {e}")
 
@@ -162,7 +164,7 @@ def run_bot():
     app.add_handler(MessageHandler(filters.VIDEO_NOTE, handle_video_note))
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_chat))
     
-    print(f"🚀 Nora Link v8.0 SRE escuchando... Admin: {ADMIN_ID}")
+    print(f"🚀 Nora Link v11.1 escuchando... Admin: {ADMIN_ID}")
     app.run_polling()
 
 if __name__ == '__main__':

@@ -11,7 +11,12 @@ logger = logging.getLogger("NoraBrain")
 from pathlib import Path
 from ia_paths import BASE_DIR, TMP_DIR, KNOWLEDGE_DIR, LOGS_DIR, DATA_DIR
 
+# Saneamiento v11.1: Asegurar carpeta temporal relativa
+if not os.path.exists("tmp"):
+    os.makedirs("tmp", exist_ok=True)
+
 SHARED_MEMORY_FILE = DATA_DIR / "shared_memory.json"
+LOCK_FILE = Path("tmp/ocr.lock")
 
 def actualizar_memoria_compartida(hitos, autor):
     """Guarda hitos autorizados en la memoria compartida."""
@@ -47,8 +52,7 @@ def encode_image(image_path):
         print(f"❌ Error en encode_image: {e}")
         return ""
 
-LOCK_FILE = TMP_DIR / "ocr.lock"
-
+# --- SEMÁFORO DE RAM ---
 def acquire_lock():
     """Implementa un semáforo simple para proteger los 4GB de RAM."""
     while LOCK_FILE.exists():
@@ -155,11 +159,21 @@ def chat_with_nora(user_prompt: str, user_id: str, channel: str = "telegram"):
             )
         except: pass
 
-    # 2. Recuperar Historial (Hilos Independientes)
+    # 2. Recuperar Historial y Memoria Compartida
     history = ia_local_store.get_conversation_history(user_id, limit=8)
     
+    shared_context = ""
+    if SHARED_MEMORY_FILE.exists():
+        try:
+            with open(SHARED_MEMORY_FILE, "r", encoding="utf-8") as f:
+                memory_data = json.load(f)
+                # Tomar los últimos 3 hitos relevantes
+                hitos = [f"{m['fecha']} - {m['autor']}: {m['hitos']}" for m in memory_data[-3:]]
+                shared_context = "\n[MEMORIA COMPARTIDA AUTORIZADA]:\n" + "\n".join(hitos)
+        except: pass
+
     # 3. Construir Mensajes para LLM
-    messages = [{"role": "system", "content": f"{NORA_SYSTEM_PROMPT}\n{role_prompt}"}]
+    messages = [{"role": "system", "content": f"{NORA_SYSTEM_PROMPT}\n{role_prompt}\n{shared_context}"}]
     for h in history:
         messages.append({"role": h["role"], "content": h["content"]})
     

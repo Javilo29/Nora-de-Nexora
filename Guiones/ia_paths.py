@@ -1,4 +1,4 @@
-# Proyecto: Nora de Nexora - MyJNexoraVisual (v5.9.5)
+# Proyecto: Nora de Nexora - MyJNexoraVisual (v11.1)
 import os
 from pathlib import Path
 
