@@ -106,8 +106,10 @@ if GROQ_KEY:
         groq_client = Groq(api_key=GROQ_KEY)
         print("🧠 Motor Groq (Multimodal v11.1) inicializado correctamente.")
     except Exception as e:
-        print(f"⚠️ Error inicializando Groq: {e}")
+        print(f"❌ Error inicializando Groq: {e}")
         groq_client = None
+else:
+    print("❌ CRÍTICO: GROQ_API_KEY no detectada en el entorno (os.environ).")
 
 # ============================================================
 # MOTOR: GEMINI (Backup / Fallback)
@@ -297,10 +299,34 @@ def proceso_visión_datos(file_paths, user_id=None, custom_prompt=None):
                 done = True
                 print(f"✅ Análisis de visión completado con éxito ({m_used}).")
             except Exception as e:
-                err_msg = f"❌ ERROR DE API/MEMORIA EN GROQ VISION: {str(e)}"
+                err_msg = f"❌ DEBUG VISION - Error completo: {str(e)}"
                 print(err_msg)
                 traceback.print_exc()
-                body = f"Javier, el motor Groq Vision reporta un error técnico: {str(e)}"
+                
+                # Intento de recuperación con modelo alternativo si es error de modelo
+                if "404" in str(e) or "model_not_found" in str(e).lower():
+                    try:
+                        print("🔄 Intentando recuperación con modelo alternativo (90b)...")
+                        completion = groq_client.chat.completions.create(
+                            model="llama-3.2-90b-vision-preview",
+                            messages=[
+                                {"role": "user", "content": [
+                                    {"type": "text", "text": prompt},
+                                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+                                ]}
+                            ],
+                            temperature=0.1,
+                            max_tokens=1024
+                        )
+                        body = completion.choices[0].message.content.strip()
+                        m_used = "llama-3.2-90b-vision"
+                        done = True
+                        print(f"✅ Recuperación exitosa con {m_used}.")
+                    except Exception as e2:
+                        print(f"❌ Fallo también el modelo alternativo: {e2}")
+                        body = f"Javier, el motor Groq Vision reporta un error técnico crítico: {str(e)}"
+                else:
+                    body = f"Javier, el motor Groq Vision reporta un error de conexión: {str(e)}"
 
         # Fallback a Gemini si Groq falla
         if not done and gemini_model:
