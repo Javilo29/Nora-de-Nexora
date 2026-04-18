@@ -1,6 +1,6 @@
 """
-NORA v12.3 FINAL - FPS.ms Ready
-Modo Polling 24/7 - Sin Flask - Sin Webhooks
+NORA v12.3 FINAL - Blindada para FPS.ms
+Modo Polling 24/7 - Sin Dependencia Estricta de .env
 """
 import os
 import logging
@@ -13,7 +13,7 @@ import requests
 from PIL import Image
 from groq import Groq
 
-# Configuración
+# --- CONFIGURACIÓN DE SEGURIDAD ---
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -24,14 +24,14 @@ try:
 except ImportError:
     pass
 
-# Valores para FPS.ms (si no encuentra variables de entorno)
+# Valores de Respaldo para FPS.ms
 TOKEN = os.getenv("BOT_TOKEN") or "8638244059:AAGEkLUe4uRmhF3eYb7CxPhFjJeiQa7fuxc"
-GROQ_API_KEY = os.getenv("GROQ_API_KEY") or "gsk_TU_API_KEY_REAL_DE_GROQ"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY") or "gsk_poner_aqui_api_key_real"
 ADMIN_ID = int(os.getenv("ADMIN_CHAT_ID") or "1645060982")
 
-# Verificación de seguridad
-if not GROQ_API_KEY or GROQ_API_KEY == "gsk_TU_API_KEY_REAL_DE_GROQ":
-    print("⚠️ ADVERTENCIA: GROQ_API_KEY no configurada correctamente", flush=True)
+# Verificación de Seguridad en Consola
+if not GROQ_API_KEY or GROQ_API_KEY == "gsk_poner_aqui_api_key_real":
+    print("⚠️ ADVERTENCIA: GROQ_API_KEY no configurada. Nora estará en modo limitado.", flush=True)
 
 groq_client = Groq(api_key=GROQ_API_KEY)
 
@@ -43,10 +43,8 @@ FAQ_RESPUESTAS = {
     "ayuda": "Soy Nora, su asistente virtual. Puedo ayudarle a procesar facturas, recordarle tareas o responder consultas sobre Nexora Visual."
 }
 
-# Memoria Multi-Cliente
 memoria_usuarios = {}
 
-# Prompt del Sistema
 NORA_SYSTEM_PROMPT = """
 Eres Nora, la Asistente Virtual Oficial de Nexora Visual. 
 Tu tono es profesional, ejecutivo y amable. Hablas español neutro.
@@ -95,7 +93,6 @@ Si no podés leer algún dato, usá null.
         logger.error(f"Error Visión: {e}")
         return {"cuit": None, "importe": None, "fecha": None, "error": str(e)}
 
-# --- FUNCIÓN DE CONVERSACIÓN ---
 def conversar_con_nora(mensaje, chat_id):
     for clave, respuesta in FAQ_RESPUESTAS.items():
         if clave in mensaje.lower():
@@ -129,7 +126,7 @@ def conversar_con_nora(mensaje, chat_id):
 
 # --- HANDLERS DE TELEGRAM ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("👋 Buenos días. Soy Nora, asistente virtual de Nexora Visual. ¿En qué puedo asistirle hoy?")
+    await update.message.reply_text("👋 Buenos días Javi. Soy Nora, tu asistente 24/7 en FPS.ms. ¿En qué puedo asistirte?")
 
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("📸 Procesando documento fiscal...")
@@ -159,9 +156,8 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     respuesta = conversar_con_nora(texto, chat_id)
     await update.message.reply_text(respuesta)
 
-# --- ARRANQUE PARA FPS.ms (POLLING) ---
 if __name__ == "__main__":
-    print(f"🔥 Nora v12.3 arrancando en FPS.ms (Polling 24/7)...", flush=True)
+    print(f"🔥 Nora v12.3 arrancando en FPS.ms (Polling Mode)...", flush=True)
     
     application = Application.builder().token(TOKEN).build()
     application.add_handler(CommandHandler("start", start))
