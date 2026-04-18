@@ -151,23 +151,25 @@ def webhook():
     return "OK", 200
 
 if __name__ == "__main__":
+    # Forzar impresión del puerto para debug en Render
     print(f"🔥 Nora v12.1 arrancando en puerto: {PORT}", flush=True)
     
-    # Inicialización manual de la aplicación de Telegram (evita bloqueo de puerto)
     application = Application.builder().token(TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     
-    import asyncio
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(application.initialize())
-    loop.run_until_complete(application.bot.set_webhook(url=f"{RENDER_URL}/webhook"))
-    loop.run_until_complete(application.start())
-
-    logger.info(f"🚀 Nora v12.1 Unificada | Puerto dinámico: {PORT}")
+    # Webhook de Telegram
+    application.run_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        url_path="webhook",
+        webhook_url=f"{RENDER_URL}/webhook"
+    )
     
-    # El servidor Flask ahora es el ÚNICO que escucha en el puerto de Render
+    logger.info(f"🚀 Nora v12.1 Unificada | FAQ Activo | Puerto: {PORT}")
+    
+    # Servidor Flask (DEBE USAR PORT, NO 8080)
     app.run(host="0.0.0.0", port=PORT)
+
 
