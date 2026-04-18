@@ -121,6 +121,11 @@ def whatsapp_webhook():
         return jsonify({"status": "ok"}), 200
 
 def maintenance_watchdog():
+    """Watchdog v11.1: Limpieza de logs y RAM cada 12 horas."""
+    import time
+    from ia_paths import LOGS_DIR, TMP_DIR
+    
+    while True:
         try:
             print("🛡️ Watchdog: Iniciando saneamiento de ciclos v11.1...")
             # Limpiar TMP

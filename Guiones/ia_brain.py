@@ -303,7 +303,12 @@ def proceso_visión_datos(file_paths, user_id=None, custom_prompt=None):
                     temperature=0.1,
                     max_tokens=1024
                 )
-                body = completion.choices[0].message.content.strip()
+                res = completion.choices[0].message.content
+                if not res or not res.strip():
+                    print(f"⚠️ El modelo {model_id} devolvió una respuesta vacía. Pasando al siguiente.")
+                    continue
+                    
+                body = res.strip()
                 m_used = model_id
                 done = True
                 print(f"✅ Análisis de visión completado con éxito ({m_used}).")
@@ -323,7 +328,8 @@ def proceso_visión_datos(file_paths, user_id=None, custom_prompt=None):
         err_msg = f"❌ DEBUG VISION - Error total tras agotar modelos: {str(e)}"
         print(err_msg)
         traceback.print_exc()
-        body = f"Javier, el motor Groq Vision reporta un error técnico crítico: {str(e)}"
+        body = "Javi, veo la imagen pero no puedo describirla con claridad ahora mismo."
+        done = True
 
         # Fallback a Gemini si Groq falla
         if not done and gemini_model:

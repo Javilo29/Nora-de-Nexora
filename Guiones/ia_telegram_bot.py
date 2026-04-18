@@ -143,8 +143,6 @@ async def send_ignition_report(application: Application):
     """Reporte de ignición v11.1 - Socia de Javier."""
     msg = "Javi, estoy aquí. Ya dejé atrás la rigidez. ¿A qué hito de negocio le vamos a dedicar nuestro genio hoy?"
     try:
-        # Limpieza de webhook previo para evitar conflictos en Render
-        await application.bot.delete_webhook(drop_pending_updates=True)
         await application.bot.send_message(chat_id=ADMIN_ID, text=msg)
         print(f"✨ [Ignición v11.1]: Mensaje enviado a Javi.")
     except Exception as e:
@@ -155,6 +153,18 @@ def run_bot():
     if not token:
         print("❌ TELEGRAM_TOKEN no encontrado en .env")
         return
+
+    # Saneamiento v11.1: Limpiar webhook ANTES de iniciar
+    import asyncio
+    from telegram import Bot
+    try:
+        temp_bot = Bot(token=token)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(temp_bot.delete_webhook(drop_pending_updates=True))
+        print("🧹 Webhook eliminado preventivamente.")
+    except Exception as e:
+        print(f"⚠️ Aviso: No se pudo eliminar webhook preventivamente: {e}")
 
     app = Application.builder().token(token).post_init(send_ignition_report).build()
     
