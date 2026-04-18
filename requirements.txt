@@ -1,14 +1,4 @@
-python-telegram-bot[webhooks]==20.8
-pyTelegramBotAPI
+python-telegram-bot==20.8
+pillow
 groq
-python-dotenv
-flask
 requests
-psutil
-Pillow
-supabase
-face_recognition
-python-nmap
-opencv-python
-pyttsx3
-numpy
