@@ -1,4 +1,4 @@
-python-telegram-bot
+python-telegram-bot[webhooks]==20.8
 pyTelegramBotAPI
 groq
 python-dotenv
