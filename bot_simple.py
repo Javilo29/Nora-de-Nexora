@@ -1,5 +1,5 @@
 """
-NORA v12.1 - Núcleo Unificado SaaS (Desplegado por el Ingeniero Jefe)
+NORA v12.2 - Núcleo Unificado SIN FLASK (100% PTB Webhook)
 Conversación + FAQ + Visión + Memoria
 """
 import os
@@ -7,8 +7,7 @@ import logging
 import json
 import base64
 from io import BytesIO
-from flask import Flask, request
-from telegram import Update, Bot
+from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 import requests
 from PIL import Image
@@ -23,8 +22,6 @@ RENDER_URL = os.getenv("RENDER_EXTERNAL_URL", "https://nora-de-nexora.onrender.c
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 groq_client = Groq(api_key=GROQ_API_KEY)
-app = Flask(__name__)
-bot = Bot(token=TOKEN)
 
 FAQ_RESPUESTAS = {
     "servicios": "En Nexora Visual ofrecemos soluciones de IA para automatización administrativa y comercial. ¿Le gustaría agendar una demo con nuestro equipo?",
@@ -144,32 +141,20 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     respuesta = conversar_con_nora(texto, chat_id)
     await update.message.reply_text(respuesta)
 
-@app.route("/webhook", methods=["POST"])
-def webhook():
-    update = Update.de_json(request.get_json(force=True), bot)
-    application.update_queue.put_nowait(update)
-    return "OK", 200
-
-if __name__ == "__main__":
-    # Forzar impresión del puerto para debug en Render
-    print(f"🔥 Nora v12.1 arrancando en puerto: {PORT}", flush=True)
-    
+def main():
+    print(f"🔥 Nora v12.2 arrancando en puerto: {PORT}", flush=True)
     application = Application.builder().token(TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     
-    # Webhook de Telegram
     application.run_webhook(
         listen="0.0.0.0",
         port=PORT,
         url_path="webhook",
         webhook_url=f"{RENDER_URL}/webhook"
     )
-    
-    logger.info(f"🚀 Nora v12.1 Unificada | FAQ Activo | Puerto: {PORT}")
-    
-    # Servidor Flask (DEBE USAR PORT, NO 8080)
-    app.run(host="0.0.0.0", port=PORT)
+    logger.info(f"🚀 Nora v12.2 SIN FLASK corriendo en {RENDER_URL}")
 
-
+if __name__ == "__main__":
+    main()
