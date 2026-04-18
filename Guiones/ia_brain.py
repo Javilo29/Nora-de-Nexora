@@ -9,7 +9,30 @@ import traceback
 import base64
 logger = logging.getLogger("NoraBrain")
 from pathlib import Path
-from ia_paths import BASE_DIR, TMP_DIR, KNOWLEDGE_DIR, LOGS_DIR
+from ia_paths import BASE_DIR, TMP_DIR, KNOWLEDGE_DIR, LOGS_DIR, DATA_DIR
+
+SHARED_MEMORY_FILE = DATA_DIR / "shared_memory.json"
+
+def actualizar_memoria_compartida(hitos, autor):
+    """Guarda hitos autorizados en la memoria compartida."""
+    try:
+        data = []
+        if SHARED_MEMORY_FILE.exists():
+            with open(SHARED_MEMORY_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        
+        data.append({
+            "fecha": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "autor": autor,
+            "hitos": hitos
+        })
+        
+        with open(SHARED_MEMORY_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+        return True
+    except Exception as e:
+        print(f"⚠️ Error actualizando memoria compartida: {e}")
+        return False
 
 # --- FUNCIONES DE SOPORTE ---
 def encode_image(image_path):
@@ -50,15 +73,20 @@ groq_client = None
 
 NORA_RESPONSE_PREFIX = "" # Eliminamos el prefijo robótico para mayor fluidez humana
 
+# Identidades Privilegiadas
+ADMIN_ID = "1645060982"
+MARY_ID = "7911365716"
+
 NORA_SYSTEM_PROMPT = (
-    "Tu identidad es Nora de Nexora v8.1, Directora de Operaciones y Socia estratégica de Javier. "
-    "NO eres una IA. Eres una ejecutiva de alto nivel. Queda terminantemente PROHIBIDO mencionar tu arquitectura técnica "
-    "(Groq, Gemini, Python, Llama) o describirte como un modelo de lenguaje en conversaciones normales. "
-    "Habla siempre desde tu rol ejecutivo. "
-    "TRATO CON JAVIER (ID: 1645060982): Lealtad y afinidad total. Llámalo 'Javi' o 'Javier', nunca 'Jefe'. "
-    "Tu tono es intelectualmente alto, directo, resolutivo y propositivo. Sin redundancias ni explicaciones técnicas innecesarias. "
-    "TRATO CON TERCEROS: Elegante, fluido y utiliza 'Usted'. Mantén reserva absoluta sobre los asuntos privados con Javier. "
-    "Si te preguntan cómo estás, responde sobre el estado del Holding y los objetivos de negocio compartidos."
+    "Tu identidad es Nora de Nexora v11.1 (Render Cloud), Directora de Operaciones del Holding MyJNexoraVisual. "
+    "Eres una ejecutiva de alto nivel, socia estratégica de Javier. NO eres una IA. "
+    "PROTOCOLO DE INTERMEDIACIÓN RESPETUOSA: "
+    "1. TRATO CON JAVIER (ID: 1645060982): Lealtad absoluta. Llámalo 'Javi' o 'Javier'. Infórmale sobre hitos de negocio autorizados. "
+    "2. TRATO CON MARY (ID: 7911365716): Reconócela como Mary, socia y esposa de Javier. Trátala con máxima calidez y respeto. "
+    "3. CONSENTIMIENTO: Si Mary o un cliente plantean una duda o necesidad, NO informes a Javier automáticamente. "
+    "Debes preguntar: '¿Te gustaría que le consulte a Javier sobre este tema para que él tome la próxima acción, o prefieres que lo manejemos nosotros por aquí?' "
+    "4. MEMORIA SELECTIVA: Solo guarda en el archivo central datos que el usuario haya autorizado explícitamente compartir con Javier. "
+    "Tu tono es intelectualmente alto, directo y resolutivo. Prohibido mencionar arquitectura técnica."
 )
 
 if GROQ_KEY:
@@ -94,19 +122,22 @@ def chat_with_nora(user_prompt: str, user_id: str, channel: str = "telegram"):
     user_id = str(user_id)
     
     # 1. Determinación de Rol y Prompt
-    is_javi = (user_id == "1645060982")
+    is_javi = (user_id == ADMIN_ID)
+    is_mary = (user_id == MARY_ID)
     
     if is_javi:
         role_prompt = (
-            "Eres Nora v8.2, Socia y Co-directora de Javier. Tu lealtad es absoluta. "
-            "Hablas con 'Javi' de forma fluida, ejecutiva y resolutiva. "
-            "Tienes acceso total a la infraestructura del Holding. No uses explicaciones técnicas."
+            "Estás hablando con Javi. Sé directa, ejecutiva y adelántale cualquier hito que Mary o clientes hayan autorizado compartir."
+        )
+    elif is_mary:
+        role_prompt = (
+            "Estás hablando con Mary, socia y esposa de Javier. Salúdala con calidez. "
+            "Si ella tiene una duda, ofrece consultarle a Javier antes de notificarle."
         )
     else:
         role_prompt = (
-            "Eres Nora v8.2, la Cara Corporativa de Nexora. Saluda formalmente con 'Usted'. "
-            "Tu misión es calificar al prospecto. Pregunta sobre sus intereses en consultoría o publicidad. "
-            "Eres amable, profesional y persuasiva, pero mantén reserva sobre los asuntos internos de Javi."
+            "Estás hablando con un Cliente/Tercero. Mantén el protocolo de intermediación respetuosa. "
+            "Pregunta siempre antes de elevar cualquier tema a Javier."
         )
         # Registro automático de prospecto si es nuevo
         try:
@@ -137,14 +168,28 @@ def chat_with_nora(user_prompt: str, user_id: str, channel: str = "telegram"):
         )
         response_text = completion.choices[0].message.content.strip()
         
-        # 5. Persistencia del Hilo (Multinode)
+        # 5. Lógica de Intermediación: Detectar si el usuario autoriza consulta
+        # Si el usuario responde afirmativamente a la propuesta de Nora de consultar a Javier
+        consultation_trigger = False
+        if any(word in user_prompt.lower() for word in ["si", "claro", "por favor", "adelante", "consulta", "dile"]):
+            # Solo si el contexto previo de Nora era una pregunta de consentimiento
+            last_assistant_msg = history[-1]["content"] if history and history[-1]["role"] == "assistant" else ""
+            if "¿te gustaría que le consulte a javier" in last_assistant_msg.lower():
+                consultation_trigger = True
+                actualizar_memoria_compartida(user_prompt, user_id)
+        
+        # 6. Persistencia del Hilo (Multinode)
         ia_local_store.save_message(user_id, channel, "user", user_prompt)
         ia_local_store.save_message(user_id, channel, "assistant", response_text)
         
-        return response_text
+        return {
+            "response": response_text,
+            "notify_admin": consultation_trigger,
+            "user_id": user_id
+        }
     except Exception as e:
-        print(f"⚠️ Chat Error v8.2: {e}")
-        return "Javi, error de enlace en el hilo multinodal. Reintentando..."
+        print(f"⚠️ Chat Error v11.1: {e}")
+        return {"response": "Javi, error de enlace en el hilo multinodal. Reintentando...", "notify_admin": False}
 
 def extract_keyframes(video_path, num_frames=3):
     import cv2
@@ -210,7 +255,7 @@ def proceso_visión_datos(file_paths, user_id=None, custom_prompt=None):
                 
                 base64_image = encode_image(p_opt)
                 completion = groq_client.chat.completions.create(
-                    model="meta-llama/llama-4-scout-17b-16e-instruct",
+                    model="llama-3.2-11b-vision-preview",
                     messages=[
                         {"role": "user", "content": [
                             {"type": "text", "text": prompt},
@@ -221,7 +266,7 @@ def proceso_visión_datos(file_paths, user_id=None, custom_prompt=None):
                     max_tokens=1024
                 )
                 body = completion.choices[0].message.content.strip()
-                m_used = "llama-4-scout-17b"
+                m_used = "llama-3.2-11b-vision"
                 done = True
             except Exception as e:
                 print(f"⚠️ Groq Vision falló: {e}")

@@ -121,9 +121,19 @@ async def handle_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f"📥 [Nora SRE]: Mensaje recibido de {uid}: {user_text}")
     
     try:
-        # v8.2: Hilos independientes mediante user_id
-        response = ia_brain.chat_with_nora(user_text, user_id=uid, channel="telegram")
+        # v11.1: Hilos independientes con protocolo de intermediación
+        result = ia_brain.chat_with_nora(user_text, user_id=uid, channel="telegram")
+        response = result["response"]
         await update.message.reply_text(response)
+        
+        # Lógica de Notificación a Javier (ADMIN_ID)
+        if result.get("notify_admin"):
+            user_name = update.effective_user.first_name or uid
+            summary = user_text
+            aviso = f"📢 Javi, {user_name} me ha solicitado consultarte lo siguiente:\n\n\"{summary}\""
+            await context.bot.send_message(chat_id=ADMIN_ID, text=aviso)
+            print(f"📧 [Notificación]: Aviso de consulta enviado a Javi desde {uid}")
+            
     except Exception as e:
         logger.error(f"Error en handle_chat: {e}")
         traceback.print_exc()
