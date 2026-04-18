@@ -17,10 +17,21 @@ from groq import Groq
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# FPS.ms usa BOT_TOKEN (no TELEGRAM_TOKEN)
-TOKEN = os.getenv("BOT_TOKEN")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-ADMIN_ID = int(os.getenv("ADMIN_CHAT_ID", "0"))
+# Intentar cargar .env (para desarrollo local)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+# Valores para FPS.ms (si no encuentra variables de entorno)
+TOKEN = os.getenv("BOT_TOKEN") or "8638244059:AAGEkLUe4uRmhF3eYb7CxPhFjJeiQa7fuxc"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY") or "gsk_TU_API_KEY_REAL_DE_GROQ"
+ADMIN_ID = int(os.getenv("ADMIN_CHAT_ID") or "1645060982")
+
+# Verificación de seguridad
+if not GROQ_API_KEY or GROQ_API_KEY == "gsk_TU_API_KEY_REAL_DE_GROQ":
+    print("⚠️ ADVERTENCIA: GROQ_API_KEY no configurada correctamente", flush=True)
 
 groq_client = Groq(api_key=GROQ_API_KEY)
 
